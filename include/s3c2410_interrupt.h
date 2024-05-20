@@ -11,15 +11,15 @@ extern "C"
     {
         __IO uint32_t SRCPND;    // 0x00 Source pending
         __IO uint32_t INTMOD;    // 0x04 Interrupt mode
-        __IO uint32_t INTMSK;    // 0x08 Interrupt mask
-        __IO uint32_t PRIORITY;  // 0x0C IRQ priority
+        __IO uint32_t INTMSK;    // 0x08 Interrupt mask, default 0xFFFFFFFF
+        __IO uint32_t PRIORITY;  // 0x0C IRQ priority, default 0x0
         __IO uint32_t INTPND;    // 0x10 Interrupt pending (IQQ)
         __IO uint32_t INTOFFSET; // 0x14 Interrupt offset (IRQ)
         __IO uint32_t SUBSRCPND; // 0x18 Sub-source pending
         __IO uint32_t INTSUBMSK; // 0x2C Interrupt sub-mask
     } INT_TypeDef;
 
-#define Interrupt ((*INT_TypeDef)INT_BASE)
+#define Interrupt ((INT_TypeDef *)INT_BASE)
 
     typedef enum
     {
@@ -63,13 +63,13 @@ extern "C"
         SUBSRC_INT_TXD0 = 1 << 1,
         SUBSRC_INT_ERR0 = 1 << 2,
         SUBSRC_INT_RXD1 = 1 << 3,
-        SUBSRC_INT_TXD0 = 1 << 4,
+        SUBSRC_INT_TXD1 = 1 << 4,
         SUBSRC_INT_ERR1 = 1 << 5,
         SUBSRC_INT_RXD2 = 1 << 6,
         SUBSRC_INT_TXD2 = 1 << 7,
         SUBSRC_INT_ERR2 = 1 << 8,
         SUBSRC_INT_TC = 1 << 9,
-        SUBSRC_INT_ADC = 1 << 210,
+        SUBSRC_INT_ADC = 1 << 10,
     } SubInterruptource;
 
     typedef enum
@@ -78,6 +78,7 @@ extern "C"
         MODE_FIQ = 1
     } InterruptMode;
 
+// Set whether IRQ(0) or FIQ(1), default is IRQ
 #define INT_SetMode(src, mode) (mode ? (Interrupt->INTMOD |= src) : (Interrupt->INTMOD &= (~src)))
 
 #define INT_Enable(src) (Interrupt->INTMSK &= (~src))
@@ -86,14 +87,15 @@ extern "C"
 #define INT_EnableSub(subsrc) (Interrupt->SUBINTMSK &= (~subsrc))
 #define INT_DisableSub(subsrc) (Interrupt->SUBINTMSK |= subsrc)
 
-#define INT_GetSourcePending(src) ((Interrupt->SRCPND & src == 0) ? 0 : 1)
-#define INT_GetInterruptPending(src) ((Interrupt->INTPND & src == 0) ? 0 : 1)
-#define INT_ClearInterruptPending(src) (Interrupt->INTPND = 0)
-#define INT_ClearSourcePending(src) (Interrupt->SRCPND &= (~src))
+#define INT_GetSourcePending(src) (Interrupt->SRCPND & src != 0)
+#define INT_GetInterruptPending(src) ((Interrupt->INTPND & src) != 0)
+
+// Write 1 to clear, which is fucking weired
+#define INT_ClearInterruptPending() (Interrupt->INTPND = Interrupt->INTPND) // Only 1 bit will be set at a time
+#define INT_ClearSourcePending(src) (Interrupt->SRCPND |= src)
 
 #define INT_GetSubSourcePending(subsrc) ((Interrupt->SUBSRCPND & subsrc == 0) ? 0 : 1)
 #define INT_ClearSubSourcePending(subsrc) (Interrupt->SUBSRCPND &= (~subsrc))
-
 
 #ifdef __cplusplus
 }
