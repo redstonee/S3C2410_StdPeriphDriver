@@ -95,7 +95,7 @@ extern "C"
 #define INT_ClearSourcePending(src) (Interrupt->SRCPND |= src)
 
 #define INT_GetSubSourcePending(subsrc) ((Interrupt->SUBSRCPND & subsrc == 0) ? 0 : 1)
-#define INT_ClearSubSourcePending(subsrc) (Interrupt->SUBSRCPND &= (~subsrc))
+#define INT_ClearSubSourcePending(subsrc) (Interrupt->SUBSRCPND |= subsrc)
 
 #ifdef __cplusplus
 }
