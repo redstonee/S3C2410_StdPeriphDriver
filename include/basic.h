@@ -29,6 +29,10 @@ extern "C"
 #ifndef __IO
 #define __IO volatile /*!< defines 'read / write' permissions   */
 #endif
+#ifndef __irq
+#define __irq __attribute((interrupt))
+#endif
+
 /**\}*/
 
 /*-----------------------------------------------------------------------------*/
